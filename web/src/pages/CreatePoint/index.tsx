@@ -5,6 +5,8 @@ import { Map, TileLayer, Marker } from 'react-leaflet';
 import api from '../../services/api';
 import axios from 'axios';
 import { LeafletMouseEvent } from 'leaflet';
+import { useDropzone } from 'react-dropzone';
+import Dropzone from '../../components/Dropzone/index';
 
 import './styles.css';
 
@@ -32,6 +34,8 @@ const CreatePoint = () => {
     const [cities, setCities] = useState<string[]>([]);
     const [initialPosition, setInitialPosition] = useState<[number, number]>([0, 0]);
     const [selectItems, setSelectedItems] = useState<number[]>([]);
+    const [selectFile, setSelectFIle] = useState<File>();
+
 
     const [formData, setFormData] = useState({
         name: '',
@@ -109,27 +113,46 @@ const CreatePoint = () => {
     }
 
     function handleSelectItem(id: number) {
-        
+
         const alreadySelected = selectItems.findIndex(item => item === id);
 
         if (alreadySelected >= 0) {
-            const filteredItems = selectItems.filter(item=> item!== id);
+            const filteredItems = selectItems.filter(item => item !== id);
             setSelectedItems(filteredItems);
         } else {
             setSelectedItems([...selectItems, id]);
         }
     }
 
-   async function handleSubmit(event: FormEvent){  
-        event.preventDefault();  
-      
+    async function handleSubmit(event: FormEvent) {
+        event.preventDefault();
 
-        const {name, email, whatsapp}= formData;
-        const uf= selectUf;
-        const city= selectCity;
-        const [latitude, longitude]= selectedPosition;
-        const items= selectItems;
+        console.log(selectFile);
 
+
+
+        const { name, email, whatsapp } = formData;
+        const uf = selectUf;
+        const city = selectCity;
+        const [latitude, longitude] = selectedPosition;
+        const items = selectItems;
+
+        const data = new FormData();
+
+        data.append('name', name);
+        data.append('email', email);
+        data.append('whatsapp', whatsapp);
+        data.append('uf', uf);
+        data.append('city', city);
+        data.append('latitude', String(latitude));
+        data.append('longitude', String(longitude));
+        data.append('items', items.join(','));
+
+
+        if (selectFile) {
+            data.append('image', selectFile);
+        }
+        /*
         const data = {
             name,
             email,
@@ -139,14 +162,14 @@ const CreatePoint = () => {
             latitude,
             longitude,
             items
-        }
-       // console.log(data);
+        }*/
+        // console.log(data);
 
-       await api.post('points',data);
+        await api.post('points', data);
 
-       alert('Ponto de coleta criado!');
+        alert('Ponto de coleta criado!');
 
-       history.push('/');
+        history.push('/');
 
 
     }
@@ -163,6 +186,7 @@ const CreatePoint = () => {
 
             <form onSubmit={handleSubmit}>
                 <h1>Cadastro do <br /> ponto de coleta</h1>
+                <Dropzone onFileUpload={setSelectFIle} />
 
                 <fieldset>
                     <legend>
